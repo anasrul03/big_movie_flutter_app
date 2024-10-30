@@ -10,9 +10,12 @@ class ApiCubit extends Cubit<ApiState> {
 
   final ApiControls apiControls;
 
+  void noNetworkError() => emit(ApiNoNetworkState());
+
   Future<void> fetchMovies() async {
     try {
       emit(ApiLoadingState());
+
       final response = await apiControls.fetchPopularMovies();
 
       if (response.statusCode == 200) {

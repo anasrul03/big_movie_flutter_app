@@ -20,6 +20,15 @@ final class ApiLoadedState extends ApiState {
 
 final class ApiLoadingState extends ApiState {}
 
+class ApiNoNetworkState extends ApiState {
+  final String message;
+
+  ApiNoNetworkState({this.message = "No Network Connection"});
+
+  @override
+  List<Object?> get props => [message];
+}
+
 final class ApiErrorState extends ApiState {
   ApiErrorState({required this.errorMessage});
 

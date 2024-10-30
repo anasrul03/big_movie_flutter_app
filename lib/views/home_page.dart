@@ -1,5 +1,6 @@
 import 'package:big_movie_app/blocs/api_cubit.dart';
 import 'package:big_movie_app/blocs/api_state.dart';
+import 'package:big_movie_app/keys/home_page_keys.dart';
 import 'package:big_movie_app/views/widgets/movie_card_widget.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -22,7 +23,6 @@ class _HomePageState extends State<HomePage> {
   @override
   void initState() {
     super.initState();
-
     _scrollController = ScrollController();
     _scrollController.addListener(_onScroll);
   }
@@ -32,11 +32,8 @@ class _HomePageState extends State<HomePage> {
         _scrollController.position.maxScrollExtent) {
       final state = BlocProvider.of<ApiCubit>(context).state;
 
-      if (state is ApiLoadedState) {
-        // Fetch more movies only if not already fetching
-        setState(() {
-          _currentPage++;
-        });
+      if (state is ApiLoadedState && !state.isFetchingMore) {
+        _currentPage++;
         context
             .read<ApiCubit>()
             .fetchMoreMovies(existedMovies: state.movies, page: _currentPage);
@@ -93,13 +90,38 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildContent(ApiState state) {
-    if (state is ApiLoadedState) {
+    if (state is ApiNoNetworkState) {
+      return Scaffold(
+        backgroundColor: backgroundColor,
+        body: Center(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              const Icon(Icons.wifi_off, size: 100, color: Colors.red),
+              const SizedBox(height: 20),
+              Text(
+                state.message,
+                style: const TextStyle(fontSize: 18.0),
+                textAlign: TextAlign.center,
+              ),
+              ElevatedButton(
+                  onPressed: () =>
+                      BlocProvider.of<ApiCubit>(context).fetchMovies(),
+                  child: const Text("Try connect"))
+            ],
+          ),
+        ),
+      );
+    } else if (state is ApiLoadedState) {
       final List<dynamic> movieList = List.from(state.movies);
-
+      final double bottomPadding =
+          _getMovieList(state, movieList) % 3 == 0 ? 200 : 50;
       return GridView.builder(
+        physics: const BouncingScrollPhysics(),
         controller: _scrollController,
         shrinkWrap: true,
-        padding: EdgeInsets.zero,
+        padding: EdgeInsets.only(bottom: bottomPadding),
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
           crossAxisCount: 3,
           crossAxisSpacing: gridSpacing,
@@ -118,15 +140,19 @@ class _HomePageState extends State<HomePage> {
         },
       );
     } else if (state is ApiLoadingState) {
-      return const Center(child: CircularProgressIndicator());
+      return const Scaffold(
+          key: loadingWidgetKey,
+          body: Center(child: CircularProgressIndicator()));
     } else if (state is ApiErrorState) {
       return Scaffold(
+        key: errorWidgetKey,
         body: Center(
           child: Text("Error: ${state.errorMessage}"),
         ),
       );
     } else {
       return const Scaffold(
+        key: welcomeWidgetKey,
         body: Center(child: Text("Welcome to Big Movie")),
       );
     }

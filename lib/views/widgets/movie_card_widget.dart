@@ -3,6 +3,7 @@ import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_dotenv/flutter_dotenv.dart';
 import 'package:shimmer/shimmer.dart';
+import 'package:big_movie_app/keys/movie_card_keys.dart';
 
 class MovieCardWidget extends StatelessWidget {
   const MovieCardWidget({super.key, this.movie});
@@ -28,21 +29,25 @@ class MovieCardWidget extends StatelessWidget {
       ),
       child: movie == null
           ? Shimmer.fromColors(
-        baseColor: Colors.grey.shade300,
-        highlightColor: Colors.grey.shade100,
-        child: Container(
-          width: double.infinity,
-          height: 250,
-          decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(4),
-          ),
-        ),
-      )
+              key: movieCardLoadingKey,
+              baseColor: Colors.grey.shade300,
+              highlightColor: Colors.grey.shade100,
+              child: Container(
+                width: double.infinity,
+                height: 250,
+                color: Colors.white,
+              ),
+            )
           : CachedNetworkImage(
-        imageUrl: imagePrefix + (movie!.posterPath ?? ''),
-        fit: BoxFit.cover,
-      ),
+              key: imagePrefix.isEmpty
+                  ? movieCardErrorIconKey
+                  : movieCardKey(movie?.id.toString() ?? ''),
+              imageUrl: imagePrefix.isEmpty
+                  ? ''
+                  : imagePrefix + (movie?.posterPath ?? ''),
+              errorWidget: (context, url, error) => const Icon(Icons.error),
+              fit: BoxFit.cover,
+            ),
     );
   }
 }
