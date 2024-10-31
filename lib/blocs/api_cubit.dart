@@ -1,7 +1,10 @@
+import 'dart:io';
+
 import 'package:big_movie_app/blocs/api_state.dart';
 import 'package:big_movie_app/controls/api_controls.dart';
 import 'package:big_movie_app/models/movie_model.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:http/http.dart';
 
 class ApiCubit extends Cubit<ApiState> {
   ApiCubit(this.apiControls) : super(ApiInitialState()) {
@@ -27,6 +30,10 @@ class ApiCubit extends Cubit<ApiState> {
             errorMessage:
                 "Request failed with status: ${response.statusCode} : ${response.reasonPhrase}."));
       }
+    } on SocketException catch (e) {
+      emit(ApiNoNetworkState(message: "No Internet: ${e.message}"));
+    } on ClientException catch (e) {
+      emit(ApiErrorState(errorMessage: "Client side issue: ${e.message}"));
     } catch (e) {
       emit(ApiErrorState(errorMessage: "Error: $e"));
     }
@@ -47,6 +54,10 @@ class ApiCubit extends Cubit<ApiState> {
             errorMessage:
                 "Request failed with status: ${response.statusCode} : ${response.reasonPhrase}."));
       }
+    } on SocketException catch (e) {
+      emit(ApiNoNetworkState(message: "No Internet: ${e.message}"));
+    } on ClientException catch (e) {
+      emit(ApiErrorState(errorMessage: "Client side issue: ${e.message}"));
     } catch (e) {
       emit(ApiErrorState(errorMessage: "Error: $e"));
     }

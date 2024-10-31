@@ -2,6 +2,7 @@ import 'package:big_movie_app/blocs/api_cubit.dart';
 import 'package:big_movie_app/blocs/api_state.dart';
 import 'package:big_movie_app/keys/home_page_keys.dart';
 import 'package:big_movie_app/views/widgets/movie_card_widget.dart';
+import 'package:big_movie_app/views/widgets/overlay_manager.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -49,7 +50,12 @@ class _HomePageState extends State<HomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<ApiCubit, ApiState>(
+    return BlocConsumer<ApiCubit, ApiState>(
+      listener: (context, state) {
+        if (state is ApiErrorState) {
+          OverlayManager.showFloatingSnackBar(context, state.errorMessage);
+        }
+      },
       builder: (context, state) {
         return CupertinoPageScaffold(
           backgroundColor: backgroundColor,
@@ -140,20 +146,23 @@ class _HomePageState extends State<HomePage> {
         },
       );
     } else if (state is ApiLoadingState) {
-      return const Scaffold(
+      return Scaffold(
           key: loadingWidgetKey,
-          body: Center(child: CircularProgressIndicator()));
+          backgroundColor: backgroundColor,
+          body: const Center(child: CircularProgressIndicator()));
     } else if (state is ApiErrorState) {
       return Scaffold(
         key: errorWidgetKey,
+        backgroundColor: backgroundColor,
         body: Center(
           child: Text("Error: ${state.errorMessage}"),
         ),
       );
     } else {
-      return const Scaffold(
+      return Scaffold(
         key: welcomeWidgetKey,
-        body: Center(child: Text("Welcome to Big Movie")),
+        backgroundColor: backgroundColor,
+        body: const Center(child: Text("Welcome to Big Movie")),
       );
     }
   }
